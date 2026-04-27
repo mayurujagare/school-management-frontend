@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ROLES } from './lib/constants';
@@ -62,7 +62,7 @@ const TEACHERS = [ROLES.SCHOOL_ADMIN, ROLES.PRINCIPAL, ROLES.TEACHER];
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/parent-login" element={<OtpLoginPage />} />
@@ -112,7 +112,7 @@ function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
       <Toaster position="top-right" />
     </AuthProvider>
   );
