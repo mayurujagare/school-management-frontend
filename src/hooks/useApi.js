@@ -1,27 +1,53 @@
 import { useState, useCallback } from 'react';
+import toast from 'react-hot-toast';
 
-export const useApi = (apiFunction) => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+export function useApi() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-  const execute = useCallback(
-    async (...args) => {
-      try {
+    const execute = useCallback(async (apiCall, options = {}) => {
+        const {
+            onSuccess,
+            onError,
+            successMessage,
+            showError = true
+        } = options;
+
         setLoading(true);
         setError(null);
-        const response = await apiFunction(...args);
-        setData(response.data);
-        return response.data;
-      } catch (err) {
-        setError(err.response?.data?.message || err.message);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [apiFunction]
-  );
 
-  return { data, loading, error, execute };
-};
+        try {
+            const response = await apiCall();
+            const data = response.data;
+
+            if (successMessage) {
+                toast.success(successMessage);
+            }
+
+            if (onSuccess) {
+                onSuccess(data.data);
+            }
+
+            return data.data;
+        } catch (err) {
+            const errorMessage =
+                err.response?.data?.message || err.message || 'Something went wrong';
+
+            setError(errorMessage);
+
+            if (showError) {
+                toast.error(errorMessage);
+            }
+
+            if (onError) {
+                onError(err);
+            }
+
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    return { loading, error, execute };
+}
