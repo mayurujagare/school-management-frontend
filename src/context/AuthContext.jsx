@@ -55,6 +55,22 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // Listen for storage events (other tabs logging out)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'accessToken' && !e.newValue) {
+        // Token was removed in another tab → logout here too
+        dispatch({ type: 'LOGOUT' });
+        if (window.location.pathname !== '/login') {
+          window.location.replace('/login');
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const login = (accessToken, refreshToken, user) => {
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
@@ -73,9 +89,12 @@ export function AuthProvider({ children }) {
         await authApi.logout({ refreshToken });
       }
     } catch (error) {
+      console.error('logout error-'+error)
       // Ignore logout API errors
     } finally {
-      localStorage.clear();
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
       dispatch({ type: 'LOGOUT' });
     }
   };
@@ -98,6 +117,7 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
